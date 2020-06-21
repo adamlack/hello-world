@@ -1,0 +1,4 @@
+include helloworld/schema.sql
+graft helloworld/static
+graft helloworld/templates
+global-exclude *.pyyc
