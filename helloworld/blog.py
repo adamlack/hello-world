@@ -6,7 +6,40 @@ from werkzeug.exceptions import abort
 from helloworld.auth import login_required
 from helloworld.db import get_db
 
+import requests
+from metar import Metar
+import datetime
+import re
+
 bp = Blueprint('blog', __name__)
+
+def cleanOgi(input):
+    p = map(lambda i: i.split(), input)
+    output = []
+    i = 0
+    for l in p:
+        temp = map(lambda s: s.strip('\\n'), l)
+        output.append(' '.join(list(map(lambda t: t.strip('='), temp))[1:]))
+        i = i+1
+    return output
+
+def getLatestMetar():
+    icao = 'EGVO'
+    end = datetime.datetime.utcnow()
+    start = end - datetime.timedelta(hours=1)
+    s = start.strftime('&ano=%Y&mes=%m&day=%d&hora=%H&min=%M')
+    e = end.strftime('&anof=%Y&mesf=%m&dayf=%d&horaf=%H&minf=%M')
+    out = None
+    urlstring = 'http://ogimet.com/display_metars2.php?lang=en&lugar='+str(icao)+'&tipo=ALL&ord=REV&nil=NO&fmt=txt'+s+e+'&send=send'
+    response = requests.get(urlstring)
+    if response is not None:
+        page = response.text.replace('\n','')
+        page = ' '.join(page.split())
+        rex = '(METAR .*?=)'
+        metars = re.findall(rex, str(page))
+        metars = cleanOgi(metars)
+        out = Metar.Metar(metars[0], strict=False)
+    return out.code
 
 @bp.route('/')
 def index():
@@ -16,7 +49,7 @@ def index():
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' ORDER BY created DESC'
     ).fetchall()
-    return render_template('blog/index.html', posts=posts)
+    return render_template('blog/index.html', posts=posts, ametar=getLatestMetar())
 
 @bp.route('/create', methods=('GET','POST'))
 @login_required
