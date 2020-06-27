@@ -41,6 +41,28 @@ def getLatestMetar():
         out = Metar.Metar(metars[0], strict=False)
     return out.code
 
+import io
+import base64
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+def plotView():
+    fig = Figure()
+    axis = fig.add_subplot(1, 1, 1)
+    axis.set_title('Sample Title')
+    axis.set_xlabel('x axis')
+    axis.set_ylabel('y axis')
+    axis.grid()
+    axis.plot(range(5), range(5), 'ro-')
+
+    pngImage = io.BytesIO()
+    FigureCanvas(fig).print_png(pngImage)
+
+    pngImageB64String = 'data:image/png;base64,'
+    pngImageB64String += base64.b64encode(pngImage.getvalue()).decode('utf8')
+
+    return pngImageB64String
+
 @bp.route('/')
 def index():
     db = get_db()
@@ -49,7 +71,7 @@ def index():
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' ORDER BY created DESC'
     ).fetchall()
-    return render_template('blog/index.html', posts=posts, ametar=getLatestMetar())
+    return render_template('blog/index.html', posts=posts, ametar=getLatestMetar(), image=plotView())
 
 @bp.route('/create', methods=('GET','POST'))
 @login_required
