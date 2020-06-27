@@ -46,10 +46,10 @@ import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-def plotView():
+def plotView(icao):
     fig = Figure()
     axis = fig.add_subplot(1, 1, 1)
-    axis.set_title('Sample Title')
+    axis.set_title(icao)
     axis.set_xlabel('x axis')
     axis.set_ylabel('y axis')
     axis.grid()
@@ -63,7 +63,7 @@ def plotView():
 
     return pngImageB64String
 
-@bp.route('/')
+@bp.route('/', methods=('GET','POST'))
 def index():
     db = get_db()
     posts = db.execute(
@@ -71,7 +71,8 @@ def index():
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' ORDER BY created DESC'
     ).fetchall()
-    return render_template('blog/index.html', posts=posts, ametar=getLatestMetar(), image=plotView())
+    an_icao = request.args.get('icao')
+    return render_template('blog/index.html', posts=posts, ametar=getLatestMetar(), image=plotView(an_icao))
 
 @bp.route('/create', methods=('GET','POST'))
 @login_required
