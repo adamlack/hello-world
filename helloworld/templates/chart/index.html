@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Charting{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <div><u>{{ an_icao }} METARS</u></div>
+    <div>{{ metars }}</div>
+{% endblock %}
