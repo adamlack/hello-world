@@ -1,1 +1,2 @@
 FLASK_APP=helloworld.py
+FLASK_ENV=development
