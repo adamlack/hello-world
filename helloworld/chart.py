@@ -38,13 +38,40 @@ def getLatestMetars(icao):
         metar_objs = []
         for m in metars:
             metar_objs.append(Metar.Metar(m, strict=False))
-        metars_raw = []
+        metars_val, times = [],[]
         for m in metar_objs:
-            metars_raw.append(m.code)
-    return metars_raw
+            metars_val.append(m.wind_speed.value('KT'))
+            times.append(m.time)
+    return metars_val, times
+
+from bokeh.models import (HoverTool, Plot, LinearAxis, Grid, Range1d)
+from bokeh.plotting import figure
+from bokeh.embed import components
+from bokeh.models.sources import ColumnDataSource
+
+def create_hover_tool():
+    return None
+
+def create_the_chart(data, title, x_name, y_name, width=600, height=300):
+    source = ColumnDataSource(data)
+    xdr, ydr = Range1d(start=0,end=max(data[x_name])), Range1d(start=0,end=max(data[y_name]))
+   
+    plot = figure(title=title, plot_width=width,
+                    plot_height=height, x_axis_type='datetime')
+
+    plot.line(x='Time', y='Value', source=data)
+    plot.add_tools(HoverTool(tooltips='<span style="background:#f00;">The value here is @Value</span>',mode='vline'))
+
+    return plot
 
 @bp.route('/', methods=('GET','POST'))
 def index():
     an_icao = request.args.get('icao')
-    metars = getLatestMetars(an_icao)
-    return render_template('chart/index.html', an_icao=an_icao, metars=metars)
+    metars, times = getLatestMetars(an_icao)
+    data = {'Time':times,'Value':metars}
+
+    hover = create_hover_tool()
+    plot = create_the_chart(data, "Titluar phrase", "Time", "Value")
+    script, div = components(plot)
+
+    return render_template('chart/index.html', an_icao=an_icao, metars=metars, the_div=div, the_script=script)

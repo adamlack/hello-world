@@ -5,6 +5,9 @@
 {% endblock %}
 
 {% block content %}
-    <div><u>{{ an_icao }} METARS</u></div>
-    <div>{{ metars }}</div>
+    <div><u>{{ an_icao }} METAR values</u></div>
+    {{ the_div|safe }}
+    <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.1.1.min.js"
+        crossorigin="anonymous"></script>
+    {{ the_script|safe }}
 {% endblock %}
